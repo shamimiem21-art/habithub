@@ -93,30 +93,30 @@ export async function GET(req: Request) {
       });
     });
 
-    const completionRate = totalScheduledCount > 0 ? Math.round((completedCount / totalScheduledCount) * 100) : 75;
-    const prevCompletionRate = prevTotalScheduledCount > 0 ? Math.round((prevCompletedCount / prevTotalScheduledCount) * 100) : 70;
+    const completionRate = totalScheduledCount > 0 ? Math.round((completedCount / totalScheduledCount) * 100) : 0;
+    const prevCompletionRate = prevTotalScheduledCount > 0 ? Math.round((prevCompletedCount / prevTotalScheduledCount) * 100) : 0;
     const rateDiff = completionRate - prevCompletionRate;
 
     const habitStatList = Object.values(habitStats);
     habitStatList.sort((a, b) => (b.total > 0 ? b.completed / b.total : 0) - (a.total > 0 ? a.completed / a.total : 0));
 
-    const bestHabit = habitStatList.length > 0 && habitStatList[0].total > 0 ? habitStatList[0].name : "Morning Meditation";
-    const worstHabit = habitStatList.length > 0 ? habitStatList[habitStatList.length - 1].name : "Read 20 Pages";
+    const bestHabit = habitStatList.length > 0 && habitStatList[0].total > 0 ? habitStatList[0].name : "None yet";
+    const worstHabit = habitStatList.length > 0 ? habitStatList[habitStatList.length - 1].name : "None yet";
 
     const skippedList = [...habitStatList].sort((a, b) => b.skipped - a.skipped);
     const mostSkippedHabit = skippedList.length > 0 && skippedList[0].skipped > 0 ? skippedList[0].name : "None";
 
-    const streakBonus = Math.min(currentStreak * 2, 15);
+    const streakBonus = currentStreak * 2;
     const productivityScore = Math.min(100, Math.round(completionRate * 0.85 + streakBonus));
 
     const suggestions: string[] = [
-      "🔥 Outstanding momentum! Keep building daily consistency.",
+      "🔥 Ready to start your habit journey! Check off your first task today to kickstart your streak.",
       "⚡ Set a daily check-in reminder at 8:00 PM to protect your streak.",
     ];
 
     const categoryPerformance = Object.values(categoryStats).map((c) => ({
       category: c.category,
-      completionRate: c.total > 0 ? Math.round((c.completed / c.total) * 100) : 80,
+      completionRate: c.total > 0 ? Math.round((c.completed / c.total) * 100) : 0,
       total: c.total,
     }));
 
@@ -124,10 +124,10 @@ export async function GET(req: Request) {
       report: {
         timeframe,
         completionRate,
-        completedTasks: completedCount || 12,
-        missedTasks: Math.max(0, totalScheduledCount - completedCount) || 2,
-        currentStreak: Math.max(7, currentStreak),
-        longestStreak: Math.max(14, longestStreak),
+        completedTasks: completedCount,
+        missedTasks: Math.max(0, totalScheduledCount - completedCount),
+        currentStreak: currentStreak,
+        longestStreak: longestStreak,
         bestHabit,
         worstHabit,
         mostSkippedHabit,
