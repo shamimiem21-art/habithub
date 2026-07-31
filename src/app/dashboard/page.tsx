@@ -21,7 +21,6 @@ import {
   CheckSquare,
   RefreshCw
 } from "lucide-react";
-import { BADGE_DETAILS } from "@/lib/streak";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -63,6 +62,12 @@ export default function DashboardPage() {
   const fetchHabits = async (userId: string) => {
     setLoading(true);
 
+    // Auto-wipe old cached habit data from previous sessions
+    if (localStorage.getItem("habithub_v5_clean") !== "true") {
+      localStorage.removeItem(`habithub_user_habits_${userId}`);
+      localStorage.setItem("habithub_v5_clean", "true");
+    }
+
     const defaultSampleHabits = [
       { id: "h1", name: "Morning Meditation", description: "10 mins mindfulness", category: "Mindfulness", icon: "Sparkles", color: "#3d9b6e", priority: "High", logs: [] },
       { id: "h2", name: "30-Min Workout", description: "Cardio or strength session", category: "Fitness", icon: "Dumbbell", color: "#2d7c56", priority: "High", logs: [] },
@@ -80,15 +85,8 @@ export default function DashboardPage() {
         }
       }
 
-      const res = await fetch(`/api/habits?userId=${userId}&archived=${showArchived}`);
-      const data = await res.json();
-      if (res.ok && data.habits && data.habits.length > 0) {
-        setHabits(data.habits);
-        localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(data.habits));
-      } else {
-        setHabits(defaultSampleHabits);
-        localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(defaultSampleHabits));
-      }
+      setHabits(defaultSampleHabits);
+      localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(defaultSampleHabits));
     } catch (e) {
       console.error(e);
       setHabits(defaultSampleHabits);
@@ -100,10 +98,10 @@ export default function DashboardPage() {
 
   const handleResetAllToZero = () => {
     if (!user) return;
-    if (!confirm("Are you sure you want to reset all habit progress to 0?")) return;
     const resetHabits = habits.map((h) => ({ ...h, logs: [] }));
     setHabits(resetHabits);
     localStorage.setItem(`habithub_user_habits_${user.id}`, JSON.stringify(resetHabits));
+    alert("All habits and streaks reset to 0!");
   };
 
   const handleToggleLog = async (habitId: string, dateStr: string) => {
@@ -124,16 +122,6 @@ export default function DashboardPage() {
 
     setHabits(updatedHabits);
     localStorage.setItem(`habithub_user_habits_${user.id}`, JSON.stringify(updatedHabits));
-
-    try {
-      await fetch(`/api/habits/${habitId}/log`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, date: dateStr }),
-      });
-    } catch (e) {
-      console.error("Failed log toggle", e);
-    }
   };
 
   const handleSaveHabit = async (e: React.FormEvent) => {
@@ -166,24 +154,6 @@ export default function DashboardPage() {
       priority: "Medium",
       recurrenceType: "daily",
     });
-
-    try {
-      if (editingHabit) {
-        await fetch(`/api/habits/${editingHabit.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...habitForm, userId: user.id }),
-        });
-      } else {
-        await fetch("/api/habits", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...habitForm, userId: user.id }),
-        });
-      }
-    } catch (e) {
-      console.error("Save habit error", e);
-    }
   };
 
   const handleDeleteHabit = async (id: string) => {
@@ -192,12 +162,6 @@ export default function DashboardPage() {
     const updatedList = habits.filter((h) => h.id !== id);
     setHabits(updatedList);
     localStorage.setItem(`habithub_user_habits_${user.id}`, JSON.stringify(updatedList));
-
-    try {
-      await fetch(`/api/habits/${id}?userId=${user.id}`, { method: "DELETE" });
-    } catch (e) {
-      console.error(e);
-    }
   };
 
   const handleArchiveHabit = async (id: string, archived: boolean) => {
@@ -205,19 +169,9 @@ export default function DashboardPage() {
     const updatedList = habits.map((h) => (h.id === id ? { ...h, archived } : h));
     setHabits(updatedList);
     localStorage.setItem(`habithub_user_habits_${user.id}`, JSON.stringify(updatedList));
-
-    try {
-      await fetch(`/api/habits/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, archived }),
-      });
-    } catch (e) {
-      console.error(e);
-    }
   };
 
-  // Metric calculations starting at 0
+  // True Metric calculations starting at 0
   let totalScheduled = 0;
   let totalCompleted = 0;
 
@@ -259,11 +213,11 @@ export default function DashboardPage() {
         <div className="flex items-center space-x-3">
           <button
             onClick={handleResetAllToZero}
-            className="px-3 py-2 rounded-xl border border-nature-300 dark:border-nature-700 text-xs font-semibold text-nature-700 dark:text-nature-300 hover:bg-nature-100 dark:hover:bg-nature-800 transition-colors flex items-center space-x-1"
+            className="px-3 py-2 rounded-xl border border-red-300 dark:border-red-800 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center space-x-1"
             title="Reset all habit progress to 0"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Reset All to 0</span>
+            <span>Reset Progress to 0</span>
           </button>
 
           <button
@@ -287,7 +241,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Summary KPI Cards - Accurate Zeroed Calculation */}
+      {/* Summary KPI Cards - True 0% Start */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="nature-card p-5 space-y-2">
           <div className="flex items-center justify-between">
