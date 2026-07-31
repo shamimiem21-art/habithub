@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/lib/db";
+import { dataStore } from "@/lib/store";
 import { verifyPassword } from "@/lib/auth";
 
 const loginSchema = z.object({
@@ -21,9 +21,7 @@ export async function POST(req: Request) {
     }
 
     const { email, password } = parsed.data;
-    const user = await db.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
-    });
+    const user = await dataStore.findUserByEmail(email);
 
     if (!user) {
       return NextResponse.json(
@@ -47,14 +45,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // Return sanitized session user payload
     const sessionUser = {
       id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
       status: user.status,
-      theme: user.theme,
+      theme: user.theme || "system",
     };
 
     return NextResponse.json({

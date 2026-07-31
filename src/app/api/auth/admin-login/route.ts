@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/lib/db";
+import { dataStore } from "@/lib/store";
 import { verifyPassword } from "@/lib/auth";
 
 const adminLoginSchema = z.object({
@@ -21,9 +21,7 @@ export async function POST(req: Request) {
     }
 
     const { email, password } = parsed.data;
-    const user = await db.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
-    });
+    const user = await dataStore.findUserByEmail(email);
 
     if (!user) {
       return NextResponse.json(
@@ -53,14 +51,6 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
-
-    // Log admin access in system telemetry
-    await db.systemLog.create({
-      data: {
-        level: "SECURITY",
-        message: `Admin ${user.email} authenticated to admin panel.`,
-      },
-    });
 
     const adminUser = {
       id: user.id,

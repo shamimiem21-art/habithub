@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/lib/db";
+import { dataStore } from "@/lib/store";
 import { hashPassword } from "@/lib/auth";
 
 const registerSchema = z.object({
@@ -24,10 +24,7 @@ export async function POST(req: Request) {
     const { name, email, password } = parsed.data;
     const normalizedEmail = email.toLowerCase().trim();
 
-    const existingUser = await db.user.findUnique({
-      where: { email: normalizedEmail },
-    });
-
+    const existingUser = await dataStore.findUserByEmail(normalizedEmail);
     if (existingUser) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
@@ -36,57 +33,29 @@ export async function POST(req: Request) {
     }
 
     const passwordHash = await hashPassword(password);
-
-    const user = await db.user.create({
-      data: {
-        name,
-        email: normalizedEmail,
-        passwordHash,
-        role: "USER",
-        status: "ACTIVE",
-        notificationSetting: {
-          create: {
-            emailEnabled: true,
-            pushEnabled: true,
-            reminderTime: "20:00",
-          },
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        status: true,
-        createdAt: true,
-      },
+    const user = await dataStore.createUser({
+      name,
+      email: normalizedEmail,
+      passwordHash,
+      role: "USER",
     });
 
-    // Create default welcome habits
-    const defaultHabits = [
-      { name: "Morning Routine", category: "Mindfulness", icon: "Sun", color: "#3d9b6e", priority: "High" },
-      { name: "Daily Exercise", category: "Fitness", icon: "Dumbbell", color: "#2d7c56", priority: "High" },
-      { name: "Read 15 Mins", category: "Learning", icon: "BookOpen", color: "#64b78e", priority: "Medium" },
-    ];
-
-    for (let i = 0; i < defaultHabits.length; i++) {
-      await db.habit.create({
-        data: {
-          userId: user.id,
-          ...defaultHabits[i],
-          order: i + 1,
-        },
-      });
-    }
+    const sessionUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+    };
 
     return NextResponse.json({
       message: "Registration successful. You can now use the platform.",
-      user,
+      user: sessionUser,
     });
   } catch (error: any) {
     console.error("Register Error:", error);
     return NextResponse.json(
-      { error: "Internal server error during registration" },
+      { error: "Failed to create account. Please try again." },
       { status: 500 }
     );
   }
