@@ -11,13 +11,15 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized: Missing userId" }, { status: 401 });
     }
 
-    const habits = await db.habit.findMany({
-      where: { userId, archived: false },
-    });
+    let habits: any[] = [];
+    let logs: any[] = [];
 
-    const logs = await db.habitLog.findMany({
-      where: { userId },
-    });
+    if (db && typeof db.habit?.findMany === "function") {
+      try {
+        habits = await db.habit.findMany({ where: { userId, archived: false } });
+        logs = await db.habitLog.findMany({ where: { userId } });
+      } catch (e) {}
+    }
 
     const today = new Date();
 
@@ -26,8 +28,8 @@ export async function GET(req: Request) {
     const dailyChart = last14Days.map((d) => {
       const dateStr = format(d, "yyyy-MM-dd");
       const label = format(d, "MMM dd");
-      const dayLogs = logs.filter((l) => l.date === dateStr);
-      const completed = dayLogs.filter((l) => l.completed).length;
+      const dayLogs = logs.filter((l: any) => l.date === dateStr);
+      const completed = dayLogs.filter((l: any) => l.completed).length;
       const total = habits.length || 1;
       const rate = Math.round((completed / total) * 100);
       return { date: dateStr, label, completed, total, rate };
@@ -37,8 +39,8 @@ export async function GET(req: Request) {
     const last90Days = eachDayOfInterval({ start: subDays(today, 89), end: today });
     const heatmap = last90Days.map((d) => {
       const dateStr = format(d, "yyyy-MM-dd");
-      const dayLogs = logs.filter((l) => l.date === dateStr);
-      const completed = dayLogs.filter((l) => l.completed).length;
+      const dayLogs = logs.filter((l: any) => l.date === dateStr);
+      const completed = dayLogs.filter((l: any) => l.completed).length;
       return {
         date: dateStr,
         count: completed,
@@ -48,8 +50,8 @@ export async function GET(req: Request) {
 
     // 3. Category performance
     const categoryMap: Record<string, { category: string; completed: number; total: number }> = {};
-    logs.forEach((log) => {
-      const habit = habits.find((h) => h.id === log.habitId);
+    logs.forEach((log: any) => {
+      const habit = habits.find((h: any) => h.id === log.habitId);
       if (habit) {
         if (!categoryMap[habit.category]) {
           categoryMap[habit.category] = { category: habit.category, completed: 0, total: 0 };

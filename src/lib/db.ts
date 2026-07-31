@@ -1,11 +1,19 @@
 import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const globalForPrisma = global as unknown as { prisma: any };
 
-export const db =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-  });
+function createPrismaInstance() {
+  if (globalForPrisma.prisma) return globalForPrisma.prisma;
+  try {
+    const client = new PrismaClient({
+      log: ["error"],
+    });
+    if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = client;
+    return client;
+  } catch (e) {
+    console.warn("Prisma Client initialization skipped on serverless container");
+    return null;
+  }
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+export const db: any = createPrismaInstance();

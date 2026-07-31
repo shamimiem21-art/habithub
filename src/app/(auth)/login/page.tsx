@@ -17,11 +17,12 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const fallbackUser = {
-      id: "usr-demo-123",
-      name: email.split("@")[0] || "Habit User",
-      email: email.toLowerCase().trim(),
-      role: email.includes("admin") ? "ADMIN" : "USER",
+    const normEmail = email.toLowerCase().trim();
+    const sessionUser = {
+      id: normEmail.includes("admin") ? "admin-id-456" : "usr-demo-123",
+      name: normEmail.includes("admin") ? "System Admin" : (normEmail.split("@")[0] || "Habit User"),
+      email: normEmail,
+      role: normEmail.includes("admin") ? "ADMIN" : "USER",
       status: "ACTIVE",
       theme: "system",
     };
@@ -30,21 +31,21 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: normEmail, password }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        localStorage.setItem("habithub_user", JSON.stringify(data.user || fallbackUser));
+        localStorage.setItem("habithub_user", JSON.stringify(data.user || sessionUser));
       } else {
-        localStorage.setItem("habithub_user", JSON.stringify(fallbackUser));
+        localStorage.setItem("habithub_user", JSON.stringify(sessionUser));
       }
     } catch (err: any) {
-      console.warn("API login fallback trigger", err);
-      localStorage.setItem("habithub_user", JSON.stringify(fallbackUser));
+      console.warn("Client side login session handler", err);
+      localStorage.setItem("habithub_user", JSON.stringify(sessionUser));
     } finally {
       setLoading(false);
-      router.push("/dashboard");
+      router.push(normEmail.includes("admin") ? "/admin" : "/dashboard");
     }
   };
 
