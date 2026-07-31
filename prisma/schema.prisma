@@ -1,0 +1,97 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                  String               @id @default(uuid())
+  name                String
+  email               String               @unique
+  passwordHash        String
+  role                String               @default("USER") // USER | ADMIN
+  status              String               @default("ACTIVE") // ACTIVE | SUSPENDED
+  avatar              String?
+  theme               String               @default("system")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  habits              Habit[]
+  habitLogs           HabitLog[]
+  badges              Badge[]
+  notificationSetting NotificationSetting?
+}
+
+model Habit {
+  id             String     @id @default(uuid())
+  userId         String
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  category       String     @default("Health") // Health, Productivity, Mindfulness, Fitness, Learning, Finance
+  icon           String     @default("CheckCircle")
+  color          String     @default("#3d9b6e")
+  priority       String     @default("Medium") // Low, Medium, High
+  active         Boolean    @default(true)
+  archived       Boolean    @default(false)
+  order          Int        @default(0)
+  recurrenceType String     @default("daily") // daily, weekly, custom
+  recurrenceDays String     @default("0,1,2,3,4,5,6") // comma separated day indices 0-6 (Sun-Sat)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  logs           HabitLog[]
+}
+
+model HabitLog {
+  id        String   @id @default(uuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String   // ISO YYYY-MM-DD
+  completed Boolean  @default(true)
+  skipped   Boolean  @default(false)
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+}
+
+model Badge {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeType String   // STREAK_7, STREAK_30, STREAK_90, STREAK_180, STREAK_365, PERFECT_WEEK, PERFECT_MONTH
+  earnedAt  DateTime @default(now())
+
+  @@unique([userId, badgeType])
+}
+
+model NotificationSetting {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled Boolean  @default(true)
+  pushEnabled  Boolean  @default(true)
+  reminderTime String   @default("20:00")
+  updatedAt    DateTime @updatedAt
+}
+
+model SystemLog {
+  id        String   @id @default(uuid())
+  level     String   @default("INFO") // INFO, WARN, ERROR, SECURITY
+  message   String
+  metadata  String?  // JSON string
+  createdAt DateTime @default(now())
+}
+
+model Announcement {
+  id         String   @id @default(uuid())
+  title      String
+  content    String
+  targetRole String   @default("ALL") // ALL, USER, ADMIN
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}

@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 140 20% 98%;
+    --foreground: 155 45% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 155 45% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 155 45% 12%;
+    --primary: 152 44% 38%;
+    --primary-foreground: 140 30% 98%;
+    --secondary: 140 25% 92%;
+    --secondary-foreground: 155 35% 20%;
+    --muted: 140 20% 94%;
+    --muted-foreground: 150 15% 40%;
+    --accent: 152 40% 90%;
+    --accent-foreground: 155 45% 18%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 140 20% 88%;
+    --input: 140 20% 88%;
+    --ring: 152 44% 38%;
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 155 50% 6%;
+    --foreground: 140 20% 95%;
+    --card: 155 40% 9%;
+    --card-foreground: 140 20% 95%;
+    --popover: 155 40% 9%;
+    --popover-foreground: 140 20% 95%;
+    --primary: 152 44% 45%;
+    --primary-foreground: 155 50% 6%;
+    --secondary: 155 30% 15%;
+    --secondary-foreground: 140 20% 90%;
+    --muted: 155 30% 14%;
+    --muted-foreground: 140 15% 65%;
+    --accent: 152 35% 18%;
+    --accent-foreground: 140 20% 95%;
+    --border: 155 25% 18%;
+    --input: 155 25% 18%;
+    --ring: 152 44% 45%;
+  }
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  overflow-x: hidden;
+}
+
+.nature-gradient {
+  background: linear-gradient(135deg, #1b4332 0%, #2d7c56 50%, #3d9b6e 100%);
+}
+
+.nature-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(196, 229, 209, 0.5);
+  border-radius: 1rem;
+  transition: all 0.25s ease-in-out;
+}
+
+.dark .nature-card {
+  background: rgba(14, 36, 27, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(45, 124, 86, 0.3);
+}
+
+.nature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(45, 124, 86, 0.15);
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3d9b6e55;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3d9b6e88;
+}
