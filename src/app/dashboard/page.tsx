@@ -19,7 +19,9 @@ import {
   Check, 
   Calendar as CalendarIcon, 
   CheckSquare,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -30,6 +32,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [showArchived, setShowArchived] = useState(false);
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = Current Week, -1 = Previous Week, +1 = Next Week
 
   // Add/Edit Habit Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -43,9 +46,10 @@ export default function DashboardPage() {
     recurrenceType: "daily",
   });
 
-  // Calculate 7 days of the current week (Sun - Sat)
+  // Calculate 7 days of the selected week (Sun - Sat)
   const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 0 });
+  const baseWeekStart = startOfWeek(today, { weekStartsOn: 0 });
+  const weekStart = addDays(baseWeekStart, weekOffset * 7);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   useEffect(() => {
@@ -61,12 +65,6 @@ export default function DashboardPage() {
 
   const fetchHabits = async (userId: string) => {
     setLoading(true);
-
-    // Auto-wipe old cached habit data from previous sessions
-    if (localStorage.getItem("habithub_v5_clean") !== "true") {
-      localStorage.removeItem(`habithub_user_habits_${userId}`);
-      localStorage.setItem("habithub_v5_clean", "true");
-    }
 
     const defaultSampleHabits = [
       { id: "h1", name: "Morning Meditation", description: "10 mins mindfulness", category: "Mindfulness", icon: "Sparkles", color: "#3d9b6e", priority: "High", logs: [] },
@@ -98,6 +96,7 @@ export default function DashboardPage() {
 
   const handleResetAllToZero = () => {
     if (!user) return;
+    if (!confirm("Are you sure you want to reset all habit progress to 0?")) return;
     const resetHabits = habits.map((h) => ({ ...h, logs: [] }));
     setHabits(resetHabits);
     localStorage.setItem(`habithub_user_habits_${user.id}`, JSON.stringify(resetHabits));
@@ -171,11 +170,16 @@ export default function DashboardPage() {
     localStorage.setItem(`habithub_user_habits_${user.id}`, JSON.stringify(updatedList));
   };
 
-  // True Metric calculations starting at 0
+  // Metric calculations for the currently viewed week
   let totalScheduled = 0;
   let totalCompleted = 0;
+  let totalAllTimeCompleted = 0;
 
   habits.forEach((h) => {
+    (h.logs || []).forEach((l: any) => {
+      if (l.completed) totalAllTimeCompleted++;
+    });
+
     weekDays.forEach((day) => {
       const dateStr = format(day, "yyyy-MM-dd");
       const log = (h.logs || []).find((l: any) => l.date === dateStr);
@@ -185,7 +189,7 @@ export default function DashboardPage() {
   });
 
   const weeklyCompletionRate = totalScheduled > 0 ? Math.round((totalCompleted / totalScheduled) * 100) : 0;
-  const currentStreak = totalCompleted > 0 ? Math.round(totalCompleted / Math.max(1, habits.length)) : 0;
+  const currentStreak = totalAllTimeCompleted > 0 ? Math.round(totalAllTimeCompleted / Math.max(1, habits.length)) : 0;
   const longestStreak = currentStreak;
   const productivityScore = weeklyCompletionRate;
 
@@ -206,7 +210,7 @@ export default function DashboardPage() {
             <span className="text-2xl">🌱</span>
           </h1>
           <p className="text-sm text-nature-600 dark:text-nature-400 mt-1">
-            Track your daily tasks, maintain streaks, and build habits from scratch.
+            Track your daily tasks, navigate weeks, maintain streaks, and build habits.
           </p>
         </div>
 
@@ -241,7 +245,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Summary KPI Cards - True 0% Start */}
+      {/* Summary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="nature-card p-5 space-y-2">
           <div className="flex items-center justify-between">
@@ -284,7 +288,7 @@ export default function DashboardPage() {
             <span className="text-xs font-medium text-amber-600">Days</span>
           </div>
           <p className="text-xs text-nature-500">
-            {currentStreak === 0 ? "Complete a task today to start your streak!" : "Streak active!"}
+            {currentStreak === 0 ? "Complete a task to start your streak!" : "Active streak!"}
           </p>
         </div>
 
@@ -367,16 +371,50 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 7-Day Habit Matrix Grid */}
+      {/* 7-Day Habit Matrix Grid with Full Week Navigation */}
       <div className="nature-card p-6 shadow-xl space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-extrabold text-nature-950 dark:text-white flex items-center space-x-2">
-            <CheckSquare className="w-5 h-5 text-leaf" />
-            <span>7-Day Habit Tracker Grid</span>
-          </h2>
-          <span className="text-xs text-nature-500 font-medium">
-            {format(weekStart, "MMM dd")} - {format(addDays(weekStart, 6), "MMM dd, yyyy")}
-          </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-nature-200 dark:border-nature-800">
+          <div className="flex items-center space-x-3">
+            <CheckSquare className="w-6 h-6 text-leaf" />
+            <div>
+              <h2 className="text-lg font-extrabold text-nature-950 dark:text-white">
+                7-Day Habit Tracker Grid
+              </h2>
+              <p className="text-xs text-nature-500 font-medium">
+                {format(weekStart, "MMM dd")} - {format(addDays(weekStart, 6), "MMM dd, yyyy")}
+              </p>
+            </div>
+          </div>
+
+          {/* Week Navigation Controls */}
+          <div className="flex items-center space-x-2 self-start sm:self-auto">
+            <button
+              onClick={() => setWeekOffset((prev) => prev - 1)}
+              className="p-2 rounded-xl border border-nature-300 dark:border-nature-700 text-nature-700 dark:text-nature-300 hover:bg-nature-100 dark:hover:bg-nature-800 transition-colors flex items-center space-x-1 text-xs font-semibold"
+              title="Navigate to Previous Week"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden md:inline">Previous Week</span>
+            </button>
+
+            {weekOffset !== 0 && (
+              <button
+                onClick={() => setWeekOffset(0)}
+                className="px-3 py-2 rounded-xl nature-gradient text-white text-xs font-bold shadow-sm hover:opacity-95 transition-all"
+              >
+                This Week
+              </button>
+            )}
+
+            <button
+              onClick={() => setWeekOffset((prev) => prev + 1)}
+              className="p-2 rounded-xl border border-nature-300 dark:border-nature-700 text-nature-700 dark:text-nature-300 hover:bg-nature-100 dark:hover:bg-nature-800 transition-colors flex items-center space-x-1 text-xs font-semibold"
+              title="Navigate to Next Week"
+            >
+              <span className="hidden md:inline">Next Week</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {loading ? (
