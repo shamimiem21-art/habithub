@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { format, startOfWeek, endOfWeek, subDays, eachDayOfInterval, startOfMonth, endOfMonth } from "date-fns";
