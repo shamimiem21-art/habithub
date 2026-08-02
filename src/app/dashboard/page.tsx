@@ -26,11 +26,17 @@ import {
   ChevronRight
 } from "lucide-react";
 
+const initialSampleHabits = [
+  { id: "h1", name: "Morning Meditation", description: "10 mins mindfulness", category: "Mindfulness", icon: "Sparkles", color: "#3d9b6e", priority: "High", logs: [] },
+  { id: "h2", name: "30-Min Workout", description: "Cardio or strength session", category: "Fitness", icon: "Dumbbell", color: "#2d7c56", priority: "High", logs: [] },
+  { id: "h3", name: "Read 20 Pages", description: "Non-fiction book or articles", category: "Learning", icon: "BookOpen", color: "#64b78e", priority: "Medium", logs: [] },
+];
+
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [habits, setHabits] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [habits, setHabits] = useState<any[]>(initialSampleHabits);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [showArchived, setShowArchived] = useState(false);
@@ -66,33 +72,22 @@ export default function DashboardPage() {
   }, [showArchived]);
 
   const fetchHabits = async (userId: string) => {
-    setLoading(true);
-
-    const defaultSampleHabits = [
-      { id: "h1", name: "Morning Meditation", description: "10 mins mindfulness", category: "Mindfulness", icon: "Sparkles", color: "#3d9b6e", priority: "High", logs: [] },
-      { id: "h2", name: "30-Min Workout", description: "Cardio or strength session", category: "Fitness", icon: "Dumbbell", color: "#2d7c56", priority: "High", logs: [] },
-      { id: "h3", name: "Read 20 Pages", description: "Non-fiction book or articles", category: "Learning", icon: "BookOpen", color: "#64b78e", priority: "Medium", logs: [] },
-    ];
-
     try {
       const localStored = localStorage.getItem(`habithub_user_habits_${userId}`);
       if (localStored) {
         const parsed = JSON.parse(localStored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setHabits(parsed);
-          setLoading(false);
           return;
         }
       }
 
-      setHabits(defaultSampleHabits);
-      localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(defaultSampleHabits));
+      setHabits(initialSampleHabits);
+      localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(initialSampleHabits));
     } catch (e) {
       console.error(e);
-      setHabits(defaultSampleHabits);
-      localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(defaultSampleHabits));
-    } finally {
-      setLoading(false);
+      setHabits(initialSampleHabits);
+      localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(initialSampleHabits));
     }
   };
 
@@ -419,9 +414,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="py-12 text-center text-sm text-nature-500">Loading your habit matrix...</div>
-        ) : filteredHabits.length === 0 ? (
+        {filteredHabits.length === 0 ? (
           <div className="py-12 text-center space-y-3">
             <p className="text-sm font-semibold text-nature-600 dark:text-nature-400">
               No habits found for this filter.
