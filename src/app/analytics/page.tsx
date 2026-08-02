@@ -23,11 +23,15 @@ import {
   Award, 
   TrendingUp, 
   CheckCircle2, 
-  Clock, 
   Sparkles,
-  Filter,
   BarChart3
 } from "lucide-react";
+
+const defaultSampleHabits = [
+  { id: "h1", name: "Morning Meditation", description: "10 mins mindfulness", category: "Mindfulness", icon: "Sparkles", color: "#3d9b6e", priority: "High", logs: [] },
+  { id: "h2", name: "30-Min Workout", description: "Cardio or strength session", category: "Fitness", icon: "Dumbbell", color: "#2d7c56", priority: "High", logs: [] },
+  { id: "h3", name: "Read 20 Pages", description: "Non-fiction book or articles", category: "Learning", icon: "BookOpen", color: "#64b78e", priority: "Medium", logs: [] },
+];
 
 export default function AnalyticsPage() {
   const router = useRouter();
@@ -38,11 +42,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("habithub_user");
-    if (!stored) {
-      router.push("/login");
-      return;
-    }
-    const u = JSON.parse(stored);
+    let u = stored ? JSON.parse(stored) : { id: "demo-user", name: "Habit Master" };
     setUser(u);
     computeAnalytics(u.id, timeRange);
   }, [timeRange]);
@@ -51,7 +51,10 @@ export default function AnalyticsPage() {
     setLoading(true);
     try {
       const localStored = localStorage.getItem(`habithub_user_habits_${userId}`);
-      const habits: any[] = localStored ? JSON.parse(localStored) : [];
+      let habits: any[] = localStored ? JSON.parse(localStored) : [];
+      if (!Array.isArray(habits) || habits.length === 0) {
+        habits = defaultSampleHabits;
+      }
 
       const daysCount = parseInt(rangeDays, 10) || 30;
       const today = new Date();
@@ -117,7 +120,7 @@ export default function AnalyticsPage() {
         total: c.total,
       }));
 
-      // 4. Habit Leaderboard (Highest completion rates)
+      // 4. Habit Leaderboard
       const leaderboard = habits.map((h) => {
         let done = 0;
         daysInterval.forEach((day) => {
