@@ -122,10 +122,12 @@ function generateAnalyticsData(habits: any[], daysCount: number) {
 export default function AnalyticsPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
   const [timeRange, setTimeRange] = useState<"14" | "30" | "90">("30");
   const [analytics, setAnalytics] = useState<any>(() => generateAnalyticsData(defaultSampleHabits, 30));
 
   useEffect(() => {
+    setMounted(true);
     const stored = localStorage.getItem("habithub_user");
     let u = stored ? JSON.parse(stored) : { id: "demo-user", name: "Habit Master" };
     setUser(u);
@@ -252,27 +254,33 @@ export default function AnalyticsPage() {
             <span>Completion Rate Trend ({timeRange} Days)</span>
           </h2>
           <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={analytics.dailyChart}>
-                <defs>
-                  <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3d9b6e" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#3d9b6e" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="label" stroke="#768065" fontSize={11} />
-                <YAxis stroke="#768065" fontSize={11} domain={[0, 100]} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1b4332",
-                    borderColor: "#2d7c56",
-                    color: "#fff",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Area type="monotone" dataKey="rate" stroke="#3d9b6e" fillOpacity={1} fill="url(#colorRate)" strokeWidth={3} />
-              </AreaChart>
-            </ResponsiveContainer>
+            {mounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={analytics.dailyChart}>
+                  <defs>
+                    <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3d9b6e" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#3d9b6e" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" stroke="#768065" fontSize={11} />
+                  <YAxis stroke="#768065" fontSize={11} domain={[0, 100]} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1b4332",
+                      borderColor: "#2d7c56",
+                      color: "#fff",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Area type="monotone" dataKey="rate" stroke="#3d9b6e" fillOpacity={1} fill="url(#colorRate)" strokeWidth={3} />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full w-full bg-nature-100 dark:bg-nature-900 animate-pulse rounded-xl flex items-center justify-center text-xs text-nature-500">
+                Loading interactive trend chart...
+              </div>
+            )}
           </div>
         </div>
 
@@ -323,25 +331,31 @@ export default function AnalyticsPage() {
               <span>Category Performance</span>
             </h2>
             <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.categoryData}>
-                  <XAxis dataKey="name" stroke="#768065" fontSize={11} />
-                  <YAxis stroke="#768065" fontSize={11} domain={[0, 100]} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1b4332",
-                      borderColor: "#2d7c56",
-                      color: "#fff",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Bar dataKey="completionRate" fill="#3d9b6e" radius={[8, 8, 0, 0]}>
-                    {(analytics.categoryData || []).map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={index % 2 === 0 ? "#3d9b6e" : "#52b788"} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              {mounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.categoryData}>
+                    <XAxis dataKey="name" stroke="#768065" fontSize={11} />
+                    <YAxis stroke="#768065" fontSize={11} domain={[0, 100]} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1b4332",
+                        borderColor: "#2d7c56",
+                        color: "#fff",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Bar dataKey="completionRate" fill="#3d9b6e" radius={[8, 8, 0, 0]}>
+                      {(analytics.categoryData || []).map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={index % 2 === 0 ? "#3d9b6e" : "#52b788"} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full w-full bg-nature-100 dark:bg-nature-900 animate-pulse rounded-xl flex items-center justify-center text-xs text-nature-500">
+                  Loading category performance chart...
+                </div>
+              )}
             </div>
           </div>
 
