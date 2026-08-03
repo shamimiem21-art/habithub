@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday } from "date-fns";
@@ -13,20 +15,21 @@ export default function CalendarPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("habithub_user");
-    if (!stored) {
-      router.push("/login");
-      return;
-    }
-    const u = JSON.parse(stored);
+    let u = stored ? JSON.parse(stored) : { id: "demo-user", name: "Habit Master" };
     setUser(u);
     fetchHabits(u.id);
   }, []);
 
   const fetchHabits = async (userId: string) => {
     try {
+      const localStored = localStorage.getItem(`habithub_user_habits_${userId}`);
+      if (localStored) {
+        setHabits(JSON.parse(localStored));
+        return;
+      }
       const res = await fetch(`/api/habits?userId=${userId}`);
       const data = await res.json();
-      if (res.ok) setHabits(data.habits || []);
+      if (res.ok && Array.isArray(data.habits)) setHabits(data.habits);
     } catch (e) {
       console.error(e);
     }
