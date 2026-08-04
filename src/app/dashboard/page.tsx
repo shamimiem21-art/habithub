@@ -26,7 +26,7 @@ import {
   ChevronRight
 } from "lucide-react";
 
-import { getBestUserHabits, saveUserHabits, initialSampleHabits } from "@/lib/habitStore";
+import { getBestUserHabits, saveUserHabits, initialSampleHabits, seedFullHabitsWithLogs } from "@/lib/habitStore";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -70,6 +70,13 @@ export default function DashboardPage() {
   const fetchHabits = async (userId: string) => {
     const recoveredHabits = getBestUserHabits(userId);
     setHabits(recoveredHabits);
+  };
+
+  const handleRestoreAllData = () => {
+    if (!user) return;
+    setHabits(seedFullHabitsWithLogs);
+    saveUserHabits(user.id, seedFullHabitsWithLogs);
+    alert("✅ All habits, check-in logs, and active streaks restored successfully!");
   };
 
   const handleResetAllToZero = () => {
@@ -193,6 +200,15 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center space-x-3">
+          <button
+            onClick={handleRestoreAllData}
+            className="px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-800 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors flex items-center space-x-1"
+            title="Restore full habit logs and active streaks"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Restore Habits & Logs</span>
+          </button>
+
           <button
             onClick={handleResetAllToZero}
             className="px-3 py-2 rounded-xl border border-red-300 dark:border-red-800 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center space-x-1"
