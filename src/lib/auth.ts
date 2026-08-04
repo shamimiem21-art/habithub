@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { db } from "./db";
+import { db, withTimeout } from "./db";
 
 export async function hashPassword(password: string): Promise<string> {
   try {
@@ -33,19 +33,24 @@ export interface UserSession {
 
 export async function getUserById(id: string) {
   try {
-    const user = await db.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        status: true,
-        avatar: true,
-        theme: true,
-        createdAt: true,
-      },
-    });
+    if (!db || typeof db.user?.findUnique !== "function") return null;
+    const user = await withTimeout(
+      db.user.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          status: true,
+          avatar: true,
+          theme: true,
+          createdAt: true,
+        },
+      }),
+      null,
+      800
+    );
     return user;
   } catch (e) {
     return null;
@@ -54,9 +59,14 @@ export async function getUserById(id: string) {
 
 export async function getUserByEmail(email: string) {
   try {
-    const user = await db.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
-    });
+    if (!db || typeof db.user?.findUnique !== "function") return null;
+    const user = await withTimeout(
+      db.user.findUnique({
+        where: { email: email.toLowerCase().trim() },
+      }),
+      null,
+      800
+    );
     return user;
   } catch (e) {
     return null;

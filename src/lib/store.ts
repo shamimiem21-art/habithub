@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db, withTimeout } from "./db";
 import bcrypt from "bcryptjs";
 
 interface MemoryUser {
@@ -102,7 +102,7 @@ export const dataStore = {
     const norm = (email || "").toLowerCase().trim();
     if (db && typeof db.user?.findUnique === "function") {
       try {
-        const u = await db.user.findUnique({ where: { email: norm } });
+        const u = await withTimeout(db.user.findUnique({ where: { email: norm } }), null, 800);
         if (u) return u;
       } catch (e) {}
     }
@@ -114,16 +114,20 @@ export const dataStore = {
     const norm = data.email.toLowerCase().trim();
     if (db && typeof db.user?.create === "function") {
       try {
-        const u = await db.user.create({
-          data: {
-            name: data.name,
-            email: norm,
-            passwordHash: data.passwordHash,
-            role: data.role || "USER",
-            status: "ACTIVE",
-          },
-        });
-        return u;
+        const u = await withTimeout(
+          db.user.create({
+            data: {
+              name: data.name,
+              email: norm,
+              passwordHash: data.passwordHash,
+              role: data.role || "USER",
+              status: "ACTIVE",
+            },
+          }),
+          null,
+          800
+        );
+        if (u) return u;
       } catch (e) {}
     }
 
