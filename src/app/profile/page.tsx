@@ -9,6 +9,8 @@ import { User, Bell, Mail, Lock, Shield, Check, AlertCircle, Save } from "lucide
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  // Force brand new Next.js client chunk generation
+  const profileBuildHash = "v1.0.4-force-rebuild-cache-bust-20260804-123800";
   const [name, setName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
