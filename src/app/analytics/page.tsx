@@ -1,5 +1,7 @@
 "use client";
 
+import { getBestUserHabits } from "@/lib/habitStore";
+
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
@@ -159,11 +161,7 @@ export default function AnalyticsBIDashboard() {
     const savedTheme = localStorage.getItem("habithub_analytics_theme");
     if (savedTheme && THEMES[savedTheme]) setThemeKey(savedTheme);
 
-    const localStoredHabits = localStorage.getItem(`habithub_user_habits_${u.id}`);
-    let habits: any[] = localStoredHabits ? JSON.parse(localStoredHabits) : [];
-    if (!Array.isArray(habits) || habits.length === 0) {
-      habits = defaultSampleHabits;
-    }
+    const habits = getBestUserHabits(u.id);
 
     const data = computeComprehensiveAnalytics(habits, timeRangeDays);
     setAnalytics(data);

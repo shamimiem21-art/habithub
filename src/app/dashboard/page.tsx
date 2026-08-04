@@ -26,11 +26,7 @@ import {
   ChevronRight
 } from "lucide-react";
 
-const initialSampleHabits = [
-  { id: "h1", name: "Morning Meditation", description: "10 mins mindfulness", category: "Mindfulness", icon: "Sparkles", color: "#3d9b6e", priority: "High", logs: [] },
-  { id: "h2", name: "30-Min Workout", description: "Cardio or strength session", category: "Fitness", icon: "Dumbbell", color: "#2d7c56", priority: "High", logs: [] },
-  { id: "h3", name: "Read 20 Pages", description: "Non-fiction book or articles", category: "Learning", icon: "BookOpen", color: "#64b78e", priority: "Medium", logs: [] },
-];
+import { getBestUserHabits, saveUserHabits, initialSampleHabits } from "@/lib/habitStore";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -72,42 +68,8 @@ export default function DashboardPage() {
   }, [showArchived]);
 
   const fetchHabits = async (userId: string) => {
-    try {
-      // 1. Try fetching current user's habits
-      const localStored = localStorage.getItem(`habithub_user_habits_${userId}`);
-      if (localStored) {
-        const parsed = JSON.parse(localStored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setHabits(parsed);
-          return;
-        }
-      }
-
-      // 2. Automatic Data Recovery: Search for any previous habit lists across localStorage and migrate them
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith("habithub_user_habits_") && key !== `habithub_user_habits_${userId}`) {
-          const val = localStorage.getItem(key);
-          if (val) {
-            try {
-              const parsed = JSON.parse(val);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                setHabits(parsed);
-                localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(parsed));
-                return;
-              }
-            } catch (e) {}
-          }
-        }
-      }
-
-      setHabits(initialSampleHabits);
-      localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(initialSampleHabits));
-    } catch (e) {
-      console.error(e);
-      setHabits(initialSampleHabits);
-      localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(initialSampleHabits));
-    }
+    const recoveredHabits = getBestUserHabits(userId);
+    setHabits(recoveredHabits);
   };
 
   const handleResetAllToZero = () => {
@@ -115,7 +77,7 @@ export default function DashboardPage() {
     if (!confirm("Are you sure you want to reset all habit progress to 0?")) return;
     const resetHabits = habits.map((h) => ({ ...h, logs: [] }));
     setHabits(resetHabits);
-    localStorage.setItem(`habithub_user_habits_${user.id}`, JSON.stringify(resetHabits));
+    saveUserHabits(user.id, resetHabits);
     alert("All habits and streaks reset to 0!");
   };
 
@@ -136,7 +98,7 @@ export default function DashboardPage() {
     });
 
     setHabits(updatedHabits);
-    localStorage.setItem(`habithub_user_habits_${user.id}`, JSON.stringify(updatedHabits));
+    saveUserHabits(user.id, updatedHabits);
   };
 
   const handleSaveHabit = async (e: React.FormEvent) => {
@@ -157,7 +119,7 @@ export default function DashboardPage() {
     }
 
     setHabits(updatedList);
-    localStorage.setItem(`habithub_user_habits_${user.id}`, JSON.stringify(updatedList));
+    saveUserHabits(user.id, updatedList);
 
     setModalOpen(false);
     setEditingHabit(null);
@@ -176,14 +138,14 @@ export default function DashboardPage() {
     if (!confirm("Are you sure you want to delete this habit?")) return;
     const updatedList = habits.filter((h) => h.id !== id);
     setHabits(updatedList);
-    localStorage.setItem(`habithub_user_habits_${user.id}`, JSON.stringify(updatedList));
+    saveUserHabits(user.id, updatedList);
   };
 
   const handleArchiveHabit = async (id: string, archived: boolean) => {
     if (!user) return;
     const updatedList = habits.map((h) => (h.id === id ? { ...h, archived } : h));
     setHabits(updatedList);
-    localStorage.setItem(`habithub_user_habits_${user.id}`, JSON.stringify(updatedList));
+    saveUserHabits(user.id, updatedList);
   };
 
   // Metric calculations for the currently viewed week

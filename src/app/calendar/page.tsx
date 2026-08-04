@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 
+import { getBestUserHabits } from "@/lib/habitStore";
+
 export default function CalendarPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -15,24 +17,14 @@ export default function CalendarPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("habithub_user");
-    let u = stored ? JSON.parse(stored) : { id: "demo-user", name: "Habit Master" };
+    let u = stored ? JSON.parse(stored) : { id: "usr-shamimiem21gmailcom", name: "Habit Master" };
     setUser(u);
     fetchHabits(u.id);
   }, []);
 
   const fetchHabits = async (userId: string) => {
-    try {
-      const localStored = localStorage.getItem(`habithub_user_habits_${userId}`);
-      if (localStored) {
-        setHabits(JSON.parse(localStored));
-        return;
-      }
-      const res = await fetch(`/api/habits?userId=${userId}`);
-      const data = await res.json();
-      if (res.ok && Array.isArray(data.habits)) setHabits(data.habits);
-    } catch (e) {
-      console.error(e);
-    }
+    const recoveredHabits = getBestUserHabits(userId);
+    setHabits(recoveredHabits);
   };
 
   const monthStart = startOfMonth(currentMonth);

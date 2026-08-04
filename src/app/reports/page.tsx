@@ -20,6 +20,7 @@ import {
   AlertTriangle, 
   PieChart 
 } from "lucide-react";
+import { getBestUserHabits } from "@/lib/habitStore";
 
 export default function ReportsPage() {
   const router = useRouter();
@@ -44,8 +45,7 @@ export default function ReportsPage() {
     setLoading(true);
 
     try {
-      const localStored = localStorage.getItem(`habithub_user_habits_${userId}`);
-      const habits: any[] = localStored ? JSON.parse(localStored) : [];
+      const habits = getBestUserHabits(userId);
 
       const today = new Date();
       let startDate: Date;
