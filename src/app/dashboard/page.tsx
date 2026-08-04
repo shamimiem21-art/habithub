@@ -26,7 +26,7 @@ import {
   ChevronRight
 } from "lucide-react";
 
-import { getBestUserHabits, saveUserHabits, initialSampleHabits, seedFullHabitsWithLogs } from "@/lib/habitStore";
+import { getBestUserHabits, saveUserHabits, initialSampleHabits, seed12HabitsWithLogs } from "@/lib/habitStore";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -104,9 +104,9 @@ export default function DashboardPage() {
 
   const handleRestoreAllData = () => {
     if (!user) return;
-    setHabits(seedFullHabitsWithLogs);
-    saveUserHabits(user.id, seedFullHabitsWithLogs);
-    alert("✅ All habits, check-in logs, and active streaks restored successfully!");
+    setHabits(seed12HabitsWithLogs);
+    saveUserHabits(user.id, seed12HabitsWithLogs);
+    alert("✅ All 12 habits, check-in logs, and active streaks restored successfully!");
   };
 
   const handleResetAllToZero = () => {
