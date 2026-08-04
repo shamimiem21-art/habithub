@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "HabitHub - Daily Habit Tracker & Consistency Engine",
   description: "Track habits, master streaks, generate weekly & monthly reports, and optimize your productivity with HabitHub.",
   other: {
-    "build-version": "1.0.9",
-    "deployment-time": "2026-08-04T19:18:00Z",
+    "build-version": "1.1.0",
+    "deployment-time": "2026-08-04T19:21:00Z",
   },
 };
 
