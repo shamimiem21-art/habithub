@@ -38,7 +38,6 @@ export default function DashboardPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0); // 0 = Current Week, -1 = Previous Week, +1 = Next Week
 
-  // Add/Edit Habit Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<any>(null);
   const [habitForm, setHabitForm] = useState({
@@ -49,6 +48,37 @@ export default function DashboardPage() {
     priority: "Medium",
     recurrenceType: "daily",
   });
+
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [bulkInput, setBulkInput] = useState("");
+
+  const handleSaveBulkHabits = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !bulkInput.trim()) return;
+
+    const titles = bulkInput.split("\n").map((t) => t.trim()).filter((t) => t.length > 0);
+    if (titles.length === 0) return;
+
+    const newHabits = titles.map((title, idx) => ({
+      id: "hbt-" + Date.now() + "-" + idx,
+      name: title,
+      description: "Custom habit",
+      category: habitForm.category || "Health",
+      color: "#3d9b6e",
+      priority: habitForm.priority || "Medium",
+      recurrenceType: "daily",
+      logs: [],
+      archived: false,
+    }));
+
+    const updatedList = [...habits, ...newHabits];
+    setHabits(updatedList);
+    saveUserHabits(user.id, updatedList);
+
+    setModalOpen(false);
+    setIsBulkMode(false);
+    setBulkInput("");
+  };
 
   // Calculate 7 days of the selected week (Sun - Sat)
   const today = new Date();
@@ -579,7 +609,63 @@ export default function DashboardPage() {
               {editingHabit ? "Edit Habit" : "Create New Habit"}
             </h3>
 
-            <form onSubmit={handleSaveHabit} className="space-y-4">
+            {!editingHabit && (
+              <div className="flex items-center space-x-2 border-b border-nature-200 dark:border-nature-800 pb-3">
+                <button
+                  type="button"
+                  onClick={() => setIsBulkMode(false)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                    !isBulkMode ? "bg-leaf text-white" : "text-nature-600 hover:bg-nature-100 dark:hover:bg-nature-800"
+                  }`}
+                >
+                  Single Habit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsBulkMode(true)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                    isBulkMode ? "bg-leaf text-white" : "text-nature-600 hover:bg-nature-100 dark:hover:bg-nature-800"
+                  }`}
+                >
+                  Bulk Add 10+ Habits
+                </button>
+              </div>
+            )}
+
+            {isBulkMode && !editingHabit ? (
+              <form onSubmit={handleSaveBulkHabits} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-nature-700 dark:text-nature-300">
+                    Paste Habit Names (One per line)
+                  </label>
+                  <textarea
+                    rows={6}
+                    required
+                    value={bulkInput}
+                    onChange={(e) => setBulkInput(e.target.value)}
+                    placeholder={"Morning Yoga\nDrink 3L Water\nRead Book\nCold Shower\nJournaling\nCoding 1hr\nWalk Dog\nMeditation\nNo Sugar\nSleep at 10PM"}
+                    className="w-full mt-1 px-3 py-2 rounded-xl border border-nature-200 dark:border-nature-800 bg-white/50 dark:bg-nature-900/50 text-sm focus:outline-none focus:ring-2 focus:ring-leaf font-mono"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end space-x-3 pt-4 border-t border-nature-100 dark:border-nature-800">
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-nature-600 hover:bg-nature-100 dark:hover:bg-nature-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl nature-gradient text-white text-xs font-bold shadow-md hover:opacity-95"
+                  >
+                    Add All Habits Instantly
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleSaveHabit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase text-nature-700 dark:text-nature-300">
                   Habit Title
@@ -657,6 +743,7 @@ export default function DashboardPage() {
                 </button>
               </div>
             </form>
+            )}
           </div>
         </div>
       )}
