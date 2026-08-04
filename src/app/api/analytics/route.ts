@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { format, subDays, eachDayOfInterval } from "date-fns";
-import { db } from "@/lib/db";
+import { db, withTimeout } from "@/lib/db";
 
 export async function GET(req: Request) {
   try {
@@ -16,8 +16,8 @@ export async function GET(req: Request) {
 
     if (db && typeof db.habit?.findMany === "function") {
       try {
-        habits = await db.habit.findMany({ where: { userId, archived: false } });
-        logs = await db.habitLog.findMany({ where: { userId } });
+        habits = await withTimeout(db.habit.findMany({ where: { userId, archived: false } }), [], 1200);
+        logs = await withTimeout(db.habitLog.findMany({ where: { userId } }), [], 1200);
       } catch (e) {}
     }
 

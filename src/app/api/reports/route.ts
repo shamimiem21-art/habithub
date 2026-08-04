@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval, startOfMonth, endOfMonth } from "date-fns";
-import { db } from "@/lib/db";
+import { db, withTimeout } from "@/lib/db";
 import { calculateHabitStreak } from "@/lib/streak";
 
 export async function GET(req: Request) {
@@ -18,13 +18,21 @@ export async function GET(req: Request) {
 
     if (db && typeof db.habit?.findMany === "function") {
       try {
-        habits = await db.habit.findMany({
-          where: { userId, archived: false },
-          include: { logs: true },
-        });
-        allLogs = await db.habitLog.findMany({
-          where: { userId },
-        });
+        habits = await withTimeout(
+          db.habit.findMany({
+            where: { userId, archived: false },
+            include: { logs: true },
+          }),
+          [],
+          1200
+        );
+        allLogs = await withTimeout(
+          db.habitLog.findMany({
+            where: { userId },
+          }),
+          [],
+          1200
+        );
       } catch (e) {}
     }
 
