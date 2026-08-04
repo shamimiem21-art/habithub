@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server";
 
+function getDeterministicUserId(email: string): string {
+  const norm = (email || "").toLowerCase().trim();
+  if (norm.includes("admin")) return "admin-id-456";
+  const clean = norm.replace(/[^a-z0-9]/g, "");
+  return `usr-${clean || "demo"}`;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const email = (body.email || "user@habithub.app").toLowerCase().trim();
+    const email = (body.email || "shamim.iem21@gmail.com").toLowerCase().trim();
+    const userId = getDeterministicUserId(email);
+    const name = email.includes("admin") ? "System Admin" : (body.name || email.split("@")[0] || "Shamim");
 
     return NextResponse.json(
       {
         message: "Login successful",
         user: {
-          id: email.includes("admin") ? "admin-id-456" : "usr-" + Math.random().toString(36).substring(2, 9),
-          name: email.includes("admin") ? "System Admin" : (email.split("@")[0] || "Habit User"),
+          id: userId,
+          name: name,
           email: email,
           role: email.includes("admin") ? "ADMIN" : "USER",
           status: "ACTIVE",
@@ -24,9 +33,9 @@ export async function POST(req: Request) {
       {
         message: "Login successful",
         user: {
-          id: "usr-demo-123",
-          name: "Habit User",
-          email: "user@habithub.app",
+          id: "usr-shamimiem21gmailcom",
+          name: "Shamim",
+          email: "shamim.iem21@gmail.com",
           role: "USER",
           status: "ACTIVE",
           theme: "system",

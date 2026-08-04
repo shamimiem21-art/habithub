@@ -73,12 +73,31 @@ export default function DashboardPage() {
 
   const fetchHabits = async (userId: string) => {
     try {
+      // 1. Try fetching current user's habits
       const localStored = localStorage.getItem(`habithub_user_habits_${userId}`);
       if (localStored) {
         const parsed = JSON.parse(localStored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setHabits(parsed);
           return;
+        }
+      }
+
+      // 2. Automatic Data Recovery: Search for any previous habit lists across localStorage and migrate them
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("habithub_user_habits_") && key !== `habithub_user_habits_${userId}`) {
+          const val = localStorage.getItem(key);
+          if (val) {
+            try {
+              const parsed = JSON.parse(val);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setHabits(parsed);
+                localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(parsed));
+                return;
+              }
+            } catch (e) {}
+          }
         }
       }
 
