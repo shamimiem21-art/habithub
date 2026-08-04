@@ -554,46 +554,7 @@ export default function AnalyticsBIDashboard() {
         )}
       </div>
 
-      {/* 4. 90-Day Calendar Heatmap Grid */}
-      {visibleWidgets.heatmap && analytics && (
-        <div className={`p-6 rounded-2xl border shadow-xl space-y-4 ${activeTheme.cardBg}`}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <h2 className="text-lg font-bold flex items-center space-x-2">
-              <Calendar className="w-5 h-5 text-leaf" />
-              <span>90-Day Habit Activity Heatmap Matrix</span>
-            </h2>
-            <div className="flex items-center space-x-2 text-xs text-nature-500">
-              <span>Less</span>
-              <span className="w-3 h-3 rounded bg-nature-200/50 dark:bg-nature-800/50" />
-              <span className="w-3 h-3 rounded bg-nature-300 dark:bg-nature-700" />
-              <span className="w-3 h-3 rounded bg-nature-500" />
-              <span className="w-3 h-3 rounded bg-leaf" />
-              <span>More</span>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-10 sm:grid-cols-15 md:grid-cols-18 gap-1.5 pt-2">
-            {(analytics.heatmap || []).map((day: any) => {
-              const colorClass =
-                day.level === 0
-                  ? "bg-nature-200/50 dark:bg-nature-800/50"
-                  : day.level === 1
-                  ? "bg-nature-300 dark:bg-nature-700"
-                  : day.level === 2
-                  ? "bg-nature-500"
-                  : "bg-leaf text-white";
-
-              return (
-                <div
-                  key={day.date}
-                  title={`${day.date}: ${day.count} habits completed`}
-                  className={`w-full aspect-square rounded-md ${colorClass} transition-transform hover:scale-125 cursor-pointer`}
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* 5. Habit Leaderboard & Category Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
