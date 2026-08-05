@@ -12,57 +12,31 @@ export function getBestUserHabits(userId: string): any[] {
 
   try {
     const cleanId = userId || "usr-shamimiem21gmailcom";
-
-    // 1. Check exact user habit key first
     const exactUserKey = `habithub_user_habits_${cleanId}`;
-    const userRaw = localStorage.getItem(exactUserKey);
-    if (userRaw) {
-      try {
-        const parsed = JSON.parse(userRaw);
-        if (Array.isArray(parsed)) {
-          return parsed; // Return user's exact current list (honors deletions!)
-        }
-      } catch (e) {}
-    }
+    const initKey = `habithub_initialized_${cleanId}`;
 
-    // 2. Check master backup key
-    const masterRaw = localStorage.getItem("habithub_master_backup");
-    if (masterRaw) {
-      try {
-        const parsed = JSON.parse(masterRaw);
-        if (Array.isArray(parsed)) {
-          localStorage.setItem(exactUserKey, JSON.stringify(parsed));
-          return parsed;
-        }
-      } catch (e) {}
-    }
-
-    // 3. Check any older habithub_user_habits_ key
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith("habithub_user_habits_")) {
-        const raw = localStorage.getItem(key);
-        if (raw) {
-          try {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              localStorage.setItem(exactUserKey, JSON.stringify(parsed));
-              localStorage.setItem("habithub_master_backup", JSON.stringify(parsed));
-              return parsed;
-            }
-          } catch (e) {}
-        }
+    // 1. If user store is initialized or exact key exists, return user list (honors deletions 100%)
+    if (localStorage.getItem(initKey) === "true" || localStorage.getItem(exactUserKey) !== null) {
+      const userRaw = localStorage.getItem(exactUserKey);
+      if (userRaw !== null) {
+        try {
+          const parsed = JSON.parse(userRaw);
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+        } catch (e) {}
       }
     }
+
+    // 2. First-time initialization for new user: Seed 12 habits ONCE
+    localStorage.setItem(exactUserKey, JSON.stringify(seed12HabitsWithLogs));
+    localStorage.setItem(initKey, "true");
+    localStorage.setItem("habithub_master_backup", JSON.stringify(seed12HabitsWithLogs));
+    return seed12HabitsWithLogs;
   } catch (e) {
     console.error("Error reading habit store:", e);
   }
 
-  // 4. Default: Seed initial 12 habits only on very first launch
-  if (userId) {
-    localStorage.setItem(`habithub_user_habits_${userId}`, JSON.stringify(seed12HabitsWithLogs));
-  }
-  localStorage.setItem("habithub_master_backup", JSON.stringify(seed12HabitsWithLogs));
   return seed12HabitsWithLogs;
 }
 
@@ -70,7 +44,11 @@ export function saveUserHabits(userId: string, habits: any[]): void {
   if (typeof window === "undefined" || !window.localStorage) return;
   try {
     const cleanId = userId || "usr-shamimiem21gmailcom";
-    localStorage.setItem(`habithub_user_habits_${cleanId}`, JSON.stringify(habits));
+    const exactUserKey = `habithub_user_habits_${cleanId}`;
+    const initKey = `habithub_initialized_${cleanId}`;
+
+    localStorage.setItem(exactUserKey, JSON.stringify(habits));
+    localStorage.setItem(initKey, "true");
     localStorage.setItem("habithub_master_backup", JSON.stringify(habits));
 
     // Async sync to server endpoint

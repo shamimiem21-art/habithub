@@ -31,7 +31,7 @@ import { getBestUserHabits, saveUserHabits, initialSampleHabits, seed12HabitsWit
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [habits, setHabits] = useState<any[]>(initialSampleHabits);
+  const [habits, setHabits] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
