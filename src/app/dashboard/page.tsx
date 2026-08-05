@@ -118,6 +118,15 @@ export default function DashboardPage() {
     alert("All habits and streaks reset to 0!");
   };
 
+  const handleClearAllBrowserCache = () => {
+    if (typeof window !== "undefined" && window.localStorage) {
+      if (!confirm("Wipe all local habits, master backups, and cache from browser storage?")) return;
+      localStorage.clear();
+      alert("✅ All local storage wiped! Reloading page...");
+      window.location.reload();
+    }
+  };
+
   const handleToggleLog = async (habitId: string, dateStr: string) => {
     if (!user) return;
 
@@ -246,6 +255,15 @@ export default function DashboardPage() {
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Reset Progress to 0</span>
+          </button>
+
+          <button
+            onClick={handleClearAllBrowserCache}
+            className="px-3 py-2 rounded-xl border border-amber-300 dark:border-amber-800 text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors flex items-center space-x-1"
+            title="Wipe all local storage keys and hard reload"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Wipe Local Cache</span>
           </button>
 
           <button

@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   title: "HabitHub - Daily Habit Tracker & Consistency Engine",
   description: "Track habits, master streaks, generate weekly & monthly reports, and optimize your productivity with HabitHub.",
   other: {
-    "build-version": "1.2.1",
-    "deployment-time": "2026-08-05T19:55:00Z",
+    "build-version": "1.2.2",
+    "deployment-time": "2026-08-05T20:02:00Z",
   },
 };
 
